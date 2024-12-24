@@ -7,6 +7,57 @@
 #define PLAYER_HEIGHT 200
 #define MOVEMET_SPEED 10
 
+void movePlayer(SDL_Rect *rect, int moveUp, int moveDown)
+{
+	if (moveDown)
+	{
+		rect->y += MOVEMET_SPEED;
+	}
+
+	if (moveUp)
+	{
+		rect->y -= MOVEMET_SPEED;
+	}
+
+	// Prevent Out OF Bounds Attempt
+	if (rect->y < 0)
+	{
+		rect->y = 0;
+	}
+	if (rect->y + PLAYER_HEIGHT > HEIGHT)
+	{
+		rect->y = HEIGHT - PLAYER_HEIGHT;
+	}
+}
+
+void handleKeyEvent(SDL_Event *event, int *moveUp, int *moveDown, SDL_Keycode upKey, SDL_Keycode downKey)
+{
+	if (event->type == SDL_KEYDOWN)
+	{
+		if (event->key.keysym.sym == downKey)
+		{
+			*moveDown = 1;
+		}
+		if (event->key.keysym.sym == upKey)
+		{
+			*moveUp = 1;
+		}
+	}
+
+	else if (event->type == SDL_KEYUP)
+	{
+		if (event->key.keysym.sym == downKey)
+		{
+			*moveDown = 0;
+		}
+
+		if (event->key.keysym.sym == upKey)
+		{
+			*moveUp = 0;
+		}
+	}
+}
+
 int main()
 {
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
@@ -24,7 +75,8 @@ int main()
 
 	SDL_UpdateWindowSurface(window);
 	int running = 1;
-	int moveUp = 0, moveDown = 0;
+	int moveUp1 = 0, moveDown1 = 0;
+	int moveUp2 = 0, moveDown2 = 0;
 	SDL_Event event;
 	while (running)
 	{
@@ -33,55 +85,18 @@ int main()
 		{
 			running = 0;
 		}
-		if (event.type == SDL_KEYDOWN)
-		{
-			if (event.key.keysym.sym == SDLK_DOWN)
-			{
-				moveDown = 1;
-			}
-			if (event.key.keysym.sym == SDLK_UP)
-			{
-				moveUp = 1;
-			}
-		}
-
-		if (event.type == SDL_KEYUP)
-		{
-			if (event.key.keysym.sym == SDLK_DOWN)
-			{
-				moveDown = 0;
-			}
-
-			if (event.key.keysym.sym == SDLK_UP)
-			{
-				moveUp = 0;
-			}
-		}
+		handleKeyEvent(&event, &moveUp1, &moveDown1, SDLK_w, SDLK_s);
+		handleKeyEvent(&event, &moveUp2, &moveDown2, SDLK_UP, SDLK_DOWN);
 
 		SDL_FillRect(surface, &pl1, backgroundcolor);
+		SDL_FillRect(surface, &pl2, backgroundcolor);
 
-		if (moveDown)
-		{
-			pl1.y += MOVEMET_SPEED;
-		}
-
-		if (moveUp)
-		{
-			pl1.y -= MOVEMET_SPEED;
-		}
-
-		// Prevent Out OF Bounds Attempt
-		if (pl1.y < 0)
-		{
-			pl1.y = 0;
-		}
-		if (pl1.y + PLAYER_HEIGHT > HEIGHT)
-		{
-			pl1.y = HEIGHT - PLAYER_HEIGHT;
-		}
+		movePlayer(&pl1, moveUp1, moveDown1);
+		movePlayer(&pl2, moveUp2, moveDown2);
 
 		// Redraw Paddle
 		SDL_FillRect(surface, &pl1, color);
+		SDL_FillRect(surface, &pl2, color);
 
 		/* if (event.key.keysym.sym == SDLK_DOWN)
 		{
