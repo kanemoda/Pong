@@ -10,18 +10,13 @@
 #define MOVEMET_SPEED 10
 #define BALL_SPEED 7
 
-int calculatePaddleYoffset()
-{
-	return 0;
-}
-
 float random_nonzero()
 {
 	float random_number;
 	do
 	{
 		random_number = (float)rand() / RAND_MAX * 2.0f - 1.0f; // Generate between -1 and 1
-	} while (random_number == 0.0f); // Ensure it's not 0
+	} while (random_number > -0.3f && random_number < 0.3f); // Ensure it's not 0
 	return random_number;
 }
 
@@ -65,7 +60,78 @@ void moveBall(SDL_Rect *ball, int *ballxSpeed, int *ballySpeed, SDL_Rect *pl1, S
 		ball->y <= pl1->y + pl1->h &&
 		ball->y + ball->h >= pl1->y)
 	{
-		*ballxSpeed *= -1;
+		*ballxSpeed = abs(*ballxSpeed);
+		ball->x = pl1->x + pl1->w;
+
+		if (*ballxSpeed > 0)
+		{
+			*ballxSpeed += 0.3f;
+		}
+		else
+		{
+			*ballxSpeed += -0.3f;
+		}
+
+		// Calculate collision point and adjust Y velocity
+		float paddleCenter = pl1->y + pl1->h / 2.0f;
+		float ballCenter = ball->y + ball->h / 2.0f;
+		float collisionFactor = (ballCenter - paddleCenter) / (pl1->h / 2.0f); // Normalize between -1 and 1
+		*ballySpeed = (int)(collisionFactor * BALL_SPEED);
+		if (*ballySpeed == 0)
+		{
+			if (*ballxSpeed > 0)
+			{
+				*ballySpeed = 1;
+			}
+			else
+			{
+				*ballySpeed = -1;
+			}
+		}
+	}
+
+	// Paddle Collision Detecection for player 2
+	if (ball->x + ball->w >= pl2->x &&
+		ball->x <= pl2->x + pl2->w &&
+		ball->y <= pl2->y + pl2->h &&
+		ball->y + ball->h >= pl2->y)
+	{
+		*ballxSpeed = -abs(*ballxSpeed);
+		ball->x = pl2->x - ball->w;
+		if (*ballxSpeed > 0)
+		{
+			*ballxSpeed += 1.3f;
+		}
+		else
+		{
+			*ballxSpeed += -1.3f;
+		}
+
+		// Calculate collision point and adjust Y velocity
+		float paddleCenter = pl2->y + pl2->h / 2.0f;
+		float ballCenter = ball->y + ball->h / 2.0f;
+		float collisionFactor = (ballCenter - paddleCenter) / (pl2->h / 2.0f); // Normalize between -1 and 1
+		*ballySpeed = (int)(collisionFactor * BALL_SPEED);
+		if (*ballySpeed == 0)
+		{
+			if (*ballxSpeed > 0)
+			{
+				*ballySpeed = 1;
+			}
+			else
+			{
+				*ballySpeed = -1;
+			}
+		}
+	}
+
+	if (ball->x <= 0 || ball->x + ball->w >= WIDTH)
+	{
+		printf("Score\n");
+		ball->x = WIDTH / 2 - ball->w / 2;
+		ball->y = HEIGHT / 2 - ball->h / 2;
+		*ballxSpeed = random_nonzero() * BALL_SPEED;
+		*ballySpeed = random_nonzero() * BALL_SPEED;
 	}
 }
 
@@ -153,19 +219,6 @@ int main()
 		SDL_FillRect(surface, &pl1, color);
 		SDL_FillRect(surface, &pl2, color);
 		SDL_FillRect(surface, &ball, color);
-
-		/* if (event.key.keysym.sym == SDLK_DOWN)
-		{
-			SDL_FillRect(surface, &pl1, 0x00000000);
-			pl1.y += MOVEMET_SPEED;
-			SDL_FillRect(surface, &pl1, color);
-		}
-		if (event.key.keysym.sym == SDLK_UP)
-		{
-			SDL_FillRect(surface, &pl1, 0x00000000);
-			pl1.y -= MOVEMET_SPEED;
-			SDL_FillRect(surface, &pl1, color);
-		} */
 		SDL_UpdateWindowSurface(window);
 		SDL_Delay(10);
 	}
